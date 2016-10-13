@@ -533,9 +533,18 @@ declare abstract class Renderer {
      */
     preRender(): void;
     /**
-     * Renders the Renderer
+     * Renders the Renderer. Calls drawBegin and then drawEntities
      */
     render(): void;
+    /**
+     * Sets up the current render target and shader
+     */
+    drawBegin(): void;
+    /**
+     * Draws all the entities
+     */
+    drawEntities(): void;
+    private getActiveCamera();
     /**
      * Called after Render
      */
@@ -1505,7 +1514,13 @@ declare class AudioSource {
     private path;
     private sounds;
     constructor(path: string, first?: HTMLAudioElement);
+    /**
+     * Gets a new instance of the sound from cache or file
+     */
     requestSound(): HTMLAudioElement;
+    /**
+     * Returns the sound instance so it can be used again
+     */
     returnSound(sound: HTMLAudioElement): void;
     /**
      * Not Implemented
@@ -1520,6 +1535,11 @@ declare class Sound {
     private loadedEvent;
     private started;
     private groups;
+    private fadeFrom;
+    private fadeTo;
+    private fadePercent;
+    private fadeDuration;
+    private fadeEase;
     /**
      * Gets if the sound is currently playing
      */
@@ -1552,9 +1572,6 @@ declare class Sound {
      * Plays the sound
      */
     play(loop?: boolean): Sound;
-    private internalPlay();
-    private internalUpdateVolume();
-    private internalUpdateMuted();
     /**
      * Resumes if the sound was paused
      */
@@ -1571,6 +1588,11 @@ declare class Sound {
     ungroup(group: string): Sound;
     ungroupAll(): Sound;
     ingroup(group: string): boolean;
+    private internalPlay();
+    private internalUpdateVolume();
+    private internalUpdateMuted();
+    update(): void;
+    fade(volume: number, duration: number, ease?: (n: number) => number): Sound;
 }
 interface AtlasReader {
     (data: any, into: Atlas): void;
@@ -1777,6 +1799,65 @@ declare class Hitgrid extends Collider {
     private debugSub;
     debugRender(camera: Camera): void;
 }
+declare class Graphic extends Component {
+    texture: Texture;
+    crop: Rectangle;
+    scale: Vector;
+    origin: Vector;
+    rotation: number;
+    flipX: boolean;
+    flipY: boolean;
+    color: Color;
+    alpha: number;
+    width: number;
+    height: number;
+    constructor(texture: Texture, position?: Vector);
+    center(): void;
+    justify(x: number, y: number): void;
+    render(camera: Camera): void;
+}
+declare class Rectsprite extends Component {
+    size: Vector;
+    scale: Vector;
+    origin: Vector;
+    rotation: number;
+    color: Color;
+    alpha: number;
+    width: number;
+    height: number;
+    constructor(width: number, height: number, color?: Color);
+    render(): void;
+}
+declare class Sprite extends Graphic {
+    private _animation;
+    private _playing;
+    private _frame;
+    animation: AnimationSet;
+    playing: AnimationTemplate;
+    frame: number;
+    rate: number;
+    constructor(animation: string);
+    play(name: string, restart?: boolean): void;
+    has(name: string): boolean;
+    update(): void;
+    render(camera: Camera): void;
+}
+declare class Tilemap extends Component {
+    texture: Texture;
+    tileWidth: number;
+    tileHeight: number;
+    color: Color;
+    alpha: number;
+    private map;
+    private tileColumns;
+    private crop;
+    constructor(texture: Texture, tileWidth: number, tileHeight: number);
+    set(tileX: number, tileY: number, mapX: number, mapY: number, mapWidth?: number, mapHeight?: number): Tilemap;
+    clear(mapX: number, mapY: number, mapWidth?: number, mapHeight?: number): Tilemap;
+    has(mapX: number, mapY: number): boolean;
+    get(mapX: number, mapY: number): Vector;
+    render(camera: Camera): void;
+}
 declare class Particle {
     x: number;
     y: number;
@@ -1881,63 +1962,4 @@ declare class ParticleTemplate {
     scaleToY(Base: number, Range?: number): ParticleTemplate;
     scaleYEase(easer: (number) => number): ParticleTemplate;
     duration(Base: number, Range?: number): ParticleTemplate;
-}
-declare class Graphic extends Component {
-    texture: Texture;
-    crop: Rectangle;
-    scale: Vector;
-    origin: Vector;
-    rotation: number;
-    flipX: boolean;
-    flipY: boolean;
-    color: Color;
-    alpha: number;
-    width: number;
-    height: number;
-    constructor(texture: Texture, position?: Vector);
-    center(): void;
-    justify(x: number, y: number): void;
-    render(camera: Camera): void;
-}
-declare class Rectsprite extends Component {
-    size: Vector;
-    scale: Vector;
-    origin: Vector;
-    rotation: number;
-    color: Color;
-    alpha: number;
-    width: number;
-    height: number;
-    constructor(width: number, height: number, color?: Color);
-    render(): void;
-}
-declare class Sprite extends Graphic {
-    private _animation;
-    private _playing;
-    private _frame;
-    animation: AnimationSet;
-    playing: AnimationTemplate;
-    frame: number;
-    rate: number;
-    constructor(animation: string);
-    play(name: string, restart?: boolean): void;
-    has(name: string): boolean;
-    update(): void;
-    render(camera: Camera): void;
-}
-declare class Tilemap extends Component {
-    texture: Texture;
-    tileWidth: number;
-    tileHeight: number;
-    color: Color;
-    alpha: number;
-    private map;
-    private tileColumns;
-    private crop;
-    constructor(texture: Texture, tileWidth: number, tileHeight: number);
-    set(tileX: number, tileY: number, mapX: number, mapY: number, mapWidth?: number, mapHeight?: number): Tilemap;
-    clear(mapX: number, mapY: number, mapWidth?: number, mapHeight?: number): Tilemap;
-    has(mapX: number, mapY: number): boolean;
-    get(mapX: number, mapY: number): Vector;
-    render(camera: Camera): void;
 }
